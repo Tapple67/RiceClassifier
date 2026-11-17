@@ -1,0 +1,33 @@
+# Local configuration and secrets
+.env
+.env.*
+*.local
+
+# Java and Gradle
+/back/.gradle/
+/back/build/
+/back/out/
+*.class
+
+# Node and React
+node_modules/
+/front/dist/
+/front/coverage/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+/python/artifacts/
+
+# IDEs and OS files
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+*.log
