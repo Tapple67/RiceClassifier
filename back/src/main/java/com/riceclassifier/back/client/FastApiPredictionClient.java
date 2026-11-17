@@ -30,7 +30,7 @@ public class FastApiPredictionClient {
 
     public Flux<ServerSentEvent<String>> predict(RicePredictionRequest request) {
         return webClient.post()
-                .uri("/api/predict/stream")
+                .uri("/api/check")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.TEXT_EVENT_STREAM)
                 .bodyValue(request)
