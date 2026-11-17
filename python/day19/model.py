@@ -1,5 +1,5 @@
 import joblib
-from lightgbm import LGBMClassifier, LGBMRegressor, early_stopping
+from lightgbm import LGBMClassifier, early_stopping
 import numpy as np
 import optuna
 import pandas as pd
