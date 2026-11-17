@@ -5,6 +5,14 @@ import optuna
 import pandas as pd
 from sklearn.metrics import f1_score
 from sklearn.model_selection import KFold, train_test_split
+
+
+
+#=============================================================================================================================================================
+# 파일 불러오기 + 전처리 
+#=============================================================================================================================================================
+df = pd.read_csv('day19/Rice_Cammeo_Osmancik.csv')
+df.info()
 # RangeIndex: 3810 entries, 0 to 3809
 # Data columns (total 8 columns):
 #  #   Column             Non-Null Count  Dtype  
@@ -19,13 +27,6 @@ from sklearn.model_selection import KFold, train_test_split
 #  7   Class              3810 non-null   str               Cammeo 또는 Osmancik
 # dtypes: float64(5), int64(2), str(1)
 # memory usage: 238.3 KB
-
-
-#=============================================================================================================================================================
-# 파일 불러오기 + 전처리 
-#=============================================================================================================================================================
-df = pd.read_csv('day19/Rice_Cammeo_Osmancik.csv')
-df.info()
 
 print("전체 결측치:", df.isnull().sum().sum())          # 열마다 결측치를 세고 전체 행 합친결과
 # 전체 결측치: 0
