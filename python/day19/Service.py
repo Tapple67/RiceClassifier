@@ -42,6 +42,7 @@ class ModelService :
     @staticmethod
     def check( paramete ) : 
         checkDf = pd.DataFrame( [paramete] )
+        checkDf = checkDf.round(3)
         pred = model.predict(checkDf)
         proba = model.predict_proba(checkDf)[0]
         return {
