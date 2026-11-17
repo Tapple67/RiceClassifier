@@ -17,6 +17,12 @@ repositories {
 }
 
 dependencies {
-    implementation platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+    def springBootBom = org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+
+    implementation platform(springBootBom)
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor platform(springBootBom)
+    annotationProcessor 'org.projectlombok:lombok'
 }
