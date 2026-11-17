@@ -41,8 +41,8 @@ class ModelService :
     # 받은 값을 모델에 넣고 쌀뭔지 확인
     @staticmethod
     def check( paramete ) : 
-        checkDf = pd.DataFrame( [paramete] )
-        checkDf = checkDf.round(3)
+        # Spring(Jackson 3)은 JSON 키를 알파벳순으로 보내므로 학습 때의 열 순서로 다시 맞춤
+        checkDf = pd.DataFrame( [paramete] )[ model.feature_name_ ]
         pred = model.predict(checkDf)
         proba = model.predict_proba(checkDf)[0]
         return {
