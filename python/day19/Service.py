@@ -43,6 +43,10 @@ class ModelService :
     def check( paramete ) : 
         checkDf = pd.DataFrame( [paramete] )
         pred = model.predict(checkDf)
-        return pred.tolist()
+        proba = model.predict_proba(checkDf)[0]
+        return {
+             "prediction" : pred.tolist(),
+             "probabilities": proba.tolist(),
+        }
 
 model_service = ModelService()
