@@ -16,7 +16,7 @@ React ← HTTP / SSE → Spring Boot ← HTTP → FastAPI · LightGBM
 
 ## Spring Boot 실행
 
-JDK 17이 필요합니다. Gradle Wrapper가 빌드에 사용할 Gradle 버전을 지정합니다. 설치된 Gradle과 의존성 캐시가 없다면 첫 실행 시 다운로드가 필요합니다.
+JDK 17이 필요합니다. Gradle Wrapper는 Gradle 버전을 지정하고, `back/gradle/gradle-daemon-jvm.properties`는 IDE와 터미널에서 Gradle을 실행할 JDK를 17로 지정합니다. 설치된 Gradle과 의존성 캐시가 없다면 첫 실행 시 다운로드가 필요합니다.
 
 저장소 루트에서 PowerShell로 실행합니다.
 
@@ -28,6 +28,8 @@ Set-Location -LiteralPath .\back
 기본 포트는 `8080`입니다. 다른 포트가 필요하면 같은 PowerShell 창에서 `$env:SERVER_PORT = '8081'`를 실행한 뒤 서버를 시작합니다. 서버가 시작되었다는 로그와 포트가 출력되면 초기 실행이 정상입니다.
 
 실행 가능한 JAR을 만들려면 `back/`에서 `.\gradlew.bat bootJar`를 실행합니다.
+
+VS Code에서 Gradle을 불러오는 도중 `Unsupported class file major version 69`가 표시되면 JDK 17이 설치되어 있는지 확인하고, 명령 팔레트에서 `Developer: Reload Window`를 실행해 프로젝트 설정을 다시 읽습니다. 터미널에서는 `back/`에서 `.\gradlew.bat --version`으로 Gradle 데몬의 JVM 설정을 확인할 수 있습니다.
 
 ## 연동을 추가할 때
 
