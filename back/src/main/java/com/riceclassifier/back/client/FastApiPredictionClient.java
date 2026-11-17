@@ -11,8 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.codec.CodecException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.server.ResponseStatusException;
@@ -34,22 +36,7 @@ public class FastApiPredictionClient {
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.TEXT_EVENT_STREAM)
                 .bodyValue(request)
-                // * FastAPI의 상태 코드와 Content-Type을 확인한 뒤 SSE 본문을 읽는다.
-                .exchangeToFlux(response -> {
-                    int status = response.statusCode().value();
-                    if (status == 400 || status == 422) {
-                        // ! FastAPI의 검증 응답 본문에는 요청값이 포함될 수 있다.
-                        return response.releaseBody().thenMany(Flux.error(
-                                new PredictionGatewayException(HttpStatus.BAD_REQUEST, "Invalid prediction input.")));
-                    }
-                    boolean isEventStream = response.headers().contentType()
-                            .filter(MediaType.TEXT_EVENT_STREAM::isCompatibleWith)
-                            .isPresent();
-                    if (!response.statusCode().is2xxSuccessful() || !isEventStream) {
-                        return response.releaseBody().thenMany(Flux.error(upstreamFailure()));
-                    }
-                    return response.bodyToFlux(SSE_TYPE);
-                })
+                .exchangeToFlux(this::readPredictionEvents)
                 // * 첫 이벤트가 오기까지와 이후 이벤트 사이의 대기 시간을 제한한다.
                 .timeout(eventTimeout)
                 .onErrorMap(TimeoutException.class, error -> new PredictionGatewayException(
@@ -59,6 +46,29 @@ public class FastApiPredictionClient {
                         error -> upstreamFailure());
     }
 
+
+
+
+
+    private Flux<ServerSentEvent<String>> readPredictionEvents(ClientResponse response) {
+        HttpStatusCode status = response.statusCode();
+        if (status.value() == 400 || status.value() == 422) {
+            // ! FastAPI 검증 오류 본문에는 요청값이 포함될 수 있어 정해진 메시지만 전달한다.
+            return response.releaseBody().thenMany(Flux.error(
+                    new PredictionGatewayException(HttpStatus.BAD_REQUEST, "Invalid prediction input.")));
+        }
+
+        boolean isEventStream = response.headers().contentType()
+                .filter(MediaType.TEXT_EVENT_STREAM::isCompatibleWith)
+                .isPresent();
+        if (!status.is2xxSuccessful() || !isEventStream) {
+            return response.releaseBody().thenMany(Flux.error(upstreamFailure()));
+        }
+
+        return response.bodyToFlux(SSE_TYPE);
+    }
+
+    
     private static PredictionGatewayException upstreamFailure() {
         return new PredictionGatewayException(HttpStatus.BAD_GATEWAY,
                 "The prediction server could not return a valid stream.");

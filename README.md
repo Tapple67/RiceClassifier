@@ -35,9 +35,9 @@ VS Code에서 Gradle을 불러오는 도중 `Unsupported class file major versio
 
 | 파일 | 역할 |
 | --- | --- |
-| `controller/PredictionController.java` | React의 `POST /api/predictions/stream` 요청을 받고 SSE 응답을 엽니다. |
-| `service/PredictionService.java` | FastAPI 클라이언트에 예측을 요청하고 전송 중 오류를 SSE 이벤트로 바꿉니다. |
-| `client/FastApiPredictionClient.java` | WebClient로 FastAPI의 `POST /predict/stream`을 호출하고 응답을 이벤트 단위로 읽습니다. 호출 예외도 이 파일에서 정의합니다. |
+| `controller/PredictionController.java` | React의 `POST /api/predictions/stream` 요청을 받아 SSE를 반환하고 전송 중 오류를 SSE로 알립니다. |
+| `service/PredictionService.java` | FastAPI 클라이언트에 예측을 요청하고 받은 스트림을 반환합니다. |
+| `client/FastApiPredictionClient.java` | WebClient로 FastAPI의 `POST /api/check`를 호출하고 응답을 이벤트 단위로 읽습니다. 호출 예외도 이 파일에서 정의합니다. |
 | `dto/RicePredictionRequest.java` | React에서 받고 FastAPI로 보내는 쌀알 한 건의 JSON 필드와 타입을 정의합니다. |
 | `config/FastApiConfig.java` | 앱 시작 시 WebClient를 만들고 FastAPI 클라이언트를 빈으로 등록합니다. |
 | `common/ApiExceptionHandler.java` | 스트림 시작 전 빠져나온 호출 예외를 공통 HTTP 오류 응답으로 바꿉니다. |
@@ -65,13 +65,13 @@ Gradle 컴파일 시 Lombok의 `@Getter`와 `@Setter`가 DTO의 접근 메서드
 
 ### FastAPI 연동 참고
 
-Spring은 FastAPI의 `POST /predict/stream`에 `Content-Type: application/json`과 `Accept: text/event-stream` 헤더로 요청합니다. FastAPI는 이 요청에 `Content-Type: text/event-stream`으로 응답하고, `prediction` 이벤트에 예측 품종과 확률을 담은 뒤 `complete` 이벤트로 종료를 알립니다. Python 모델을 교체하거나 재학습할 때도 이 입출력 계약을 유지합니다.
+Spring은 FastAPI의 `POST /api/check`에 `Content-Type: application/json`과 `Accept: text/event-stream` 헤더로 요청합니다. 현재 FastAPI는 `Content-Type: text/event-stream`으로 응답하고, 예측 품종과 확률을 `data:` 이벤트 한 건에 담아 보냅니다. Python 모델을 교체하거나 재학습할 때도 이 입출력 계약을 유지합니다.
 
 `FastApiPredictionClient`는 FastAPI의 SSE 응답을 `bodyToFlux(SSE_TYPE)`로 읽습니다. Spring은 같은 이벤트 이름과 본문을 `text/event-stream` 응답으로 React에 전송합니다.
 
 설정은 `back/src/main/resources/application.properties`에서 바꿀 수 있습니다. `fastapi.base-url`의 기본값은 `http://localhost:8000`, `fastapi.event-timeout-seconds`의 기본값은 30초입니다. 타임아웃은 첫 이벤트와 후속 이벤트를 기다리는 시간에 적용됩니다. `app.frontend-origin`에는 React가 실행되는 주소를 지정합니다. 기본값은 `http://localhost:5173`입니다.
 
-FastAPI의 입력 거절(400 또는 422)은 Spring의 400으로 변환됩니다. 스트림 시작 전 연결 실패나 응답 형식 오류는 502, 이벤트 대기 시간 초과는 504입니다. 이 응답은 공통 `ApiExceptionHandler`에서 생성합니다. 첫 이벤트 이후 감지한 중계 오류는 `prediction_error` 이벤트로 전송합니다. React에서는 `complete` 없이 연결이 종료되면 미완료로 처리합니다.
+FastAPI의 입력 거절(400 또는 422)은 Spring의 400으로 변환됩니다. 스트림 시작 전 연결 실패나 응답 형식 오류는 502, 이벤트 대기 시간 초과는 504입니다. 이 응답은 공통 `ApiExceptionHandler`에서 생성합니다. Spring의 HTTP 응답이 이미 시작됐다면 컨트롤러가 `prediction_error` 이벤트를 보냅니다.
 
 ### 연동 검증
 
